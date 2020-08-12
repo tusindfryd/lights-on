@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Image, Button, Text, View, TouchableOpacity, Dimensions } from 'react-native';
+import { Image, Text, View, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { Camera } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
-// import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import * as Permissions from 'expo-permissions';
 import * as Sharing from 'expo-sharing';
+import * as ImageManipulator from "expo-image-manipulator";
 
 export default function App() {
   const [hasPermission, setHasPermission] = useState(null);
@@ -25,12 +27,32 @@ export default function App() {
   let takePicture = async () => {
     if (camera) {
       let photo = await camera.takePictureAsync();
+      photo = await ImageManipulator.manipulateAsync(photo.uri,
+        [{ flip: ImageManipulator.FlipType.Horizontal }],
+        { compress: 1, format: ImageManipulator.SaveFormat.JPEG })
       setPhotoUri(photo.uri);
-      console.log(photoUri);
     }
   }
 
-  let openShareDialogAsync = async () => {
+  let savePicture = async () => {
+    const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    if (status === 'granted') {
+      MediaLibrary.saveToLibraryAsync(photoUri);
+      Alert.alert(
+        "Saved",
+        "The photo was saved to the Camera Roll.",
+        [
+          { text: "Okay", onPress: () => setPhotoUri("") }
+        ],
+        { cancelable: false }
+      );
+    }
+    else {
+      alert("Camera Roll access not granted");
+    }
+  }
+
+  let sharePicture = async () => {
     await Sharing.shareAsync(photoUri);
   };
 
@@ -42,7 +64,10 @@ export default function App() {
   }
   if (photoUri) {
     return (
-      <>
+      <View style={{
+        height: Dimensions.get('screen').height,
+        backgroundColor: backgroundColors[colorIndex % backgroundColors.length]
+      }}>
         <Image source={{ uri: photoUri }}
           style={{
             top: (Dimensions.get('screen').height - (16 / 9 * Dimensions.get('screen').width * 0.8)) / 2,
@@ -50,19 +75,24 @@ export default function App() {
             width: Dimensions.get('screen').width * 0.8,
             height: 16 / 9 * Dimensions.get('screen').width * 0.8
           }} />
-        <Button
-          onPress={() => setPhotoUri("")}
-          title="Trash"
-          color="#841584"
-          accessibilityLabel="Trash"
-        />
-        <Button
-          onPress={() => openShareDialogAsync()}
-          title="Save"
-          color="#841584"
-          accessibilityLabel="Save"
-        />
-      </>
+
+        <View style={{
+          position: "absolute",
+          width: Dimensions.get('screen').width,
+          bottom: 50,
+          display: "flex", flexDirection: "row", justifyContent: "center"
+        }}>
+          <Ionicons name="ios-save" size={32} color="white" accessibilityLabel="Save" style={{ paddingHorizontal: 30 }}
+            onPress={() => savePicture()}
+          />
+          <Ionicons name="ios-trash" size={32} color="white" accessibilityLabel="Delete" style={{ paddingHorizontal: 30 }}
+            onPress={() => setPhotoUri("")}
+          />
+          <Ionicons name="ios-share" size={32} color="white" accessibilityLabel="Share" style={{ paddingHorizontal: 30 }}
+            onPress={() => sharePicture()}
+          />
+        </View>
+      </View>
     )
   }
   return (
