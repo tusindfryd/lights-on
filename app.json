@@ -1,14 +1,12 @@
 {
   "expo": {
-    "name": "light-up",
-    "slug": "light-up",
+    "name": "Lights On",
+    "slug": "lights-on",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ff0000"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -19,8 +17,17 @@
     "ios": {
       "supportsTablet": true
     },
+    "android": {
+      "package": "io.lightson",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_INTERNAL_STORAGE",
+        "WRITE_INTERNAL_STORAGE"
+      ]
+    },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/icon.png"
     }
   }
 }
